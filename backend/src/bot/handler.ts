@@ -249,13 +249,21 @@ ${knowledgeText}
         `;
 
         // Format riwayat ke format Gemini (dibalik karena query DESC)
-        const history = recentMessages
+        let history = recentMessages
           .reverse()
           .slice(0, -1) // hapus pesan user terakhir (akan dikirim sebagai input baru)
           .map((m: any) => ({
             role: m.sender === 'user' ? 'user' : 'model',
             parts: [{ text: m.content }]
           }));
+
+        // PENTING: Pastikan pesan pertama dalam history harus role 'user'
+        const firstUserIndex = history.findIndex(h => h.role === 'user');
+        if (firstUserIndex !== -1) {
+          history = history.slice(firstUserIndex);
+        } else {
+          history = [];
+        }
 
         const model = genAI.getGenerativeModel({
           model: env.GEMINI_MODEL,
