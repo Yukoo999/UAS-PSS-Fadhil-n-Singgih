@@ -1,0 +1,50 @@
+[
+  {
+    "type": "recommendation",
+    "content": "Mahasiswa biasanya cocok dengan style casual dan budget efisien."
+  },
+  {
+    "type": "recommendation",
+    "content": "Karyawan kantoran biasanya membutuhkan style formal atau smart-casual."
+  },
+  {
+    "type": "recommendation",
+    "content": "Freelancer sering cocok dengan outfit smart-casual yang fleksibel."
+  },
+  {
+    "type": "budget_rule",
+    "content": "Jika budget di bawah Rp100.000, prioritaskan kaos basic."
+  },
+  {
+    "type": "budget_rule",
+    "content": "Jika budget sekitar Rp150.000, hoodie atau polo shirt bisa menjadi opsi."
+  },
+  {
+    "type": "budget_rule",
+    "content": "Jika budget di atas Rp300.000, blazer atau kombinasi dua item bisa direkomendasikan."
+  },
+  {
+    "type": "style_hint",
+    "content": "Kaos dan hoodie termasuk kategori casual."
+  },
+  {
+    "type": "style_hint",
+    "content": "Blazer, kemeja formal, rok formal, dan celana bahan termasuk kategori formal."
+  },
+  {
+    "type": "style_hint",
+    "content": "Polo shirt, kemeja oxford, dan chino cocok untuk smart-casual."
+  },
+  {
+    "type": "sales_hint",
+    "content": "Jika stok rendah, sarankan user segera checkout atau pilih alternatif serupa."
+  },
+  {
+    "type": "sales_hint",
+    "content": "Jika ukuran yang diminta habis, tawarkan warna atau model lain dengan style yang sama."
+  },
+  {
+    "type": "conversation_hint",
+    "content": "Jika user menyebut budget, gunakan angka budget itu untuk menyaring rekomendasi."
+  }
+]

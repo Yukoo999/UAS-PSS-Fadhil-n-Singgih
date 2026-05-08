@@ -1,0 +1,50 @@
+[
+  {
+    "id": "f1",
+    "question": "Apakah bisa retur?",
+    "answer": "Bisa retur maksimal 3 hari setelah barang diterima selama produk belum dipakai.",
+    "category": "policy"
+  },
+  {
+    "id": "f2",
+    "question": "Apakah ada ongkir gratis?",
+    "answer": "Gratis ongkir untuk pembelian di atas Rp300.000.",
+    "category": "shipping"
+  },
+  {
+    "id": "f3",
+    "question": "Jam operasional toko?",
+    "answer": "Toko buka setiap hari pukul 09.00 sampai 21.00.",
+    "category": "store_info"
+  },
+  {
+    "id": "f4",
+    "question": "Apakah tersedia size S?",
+    "answer": "Ketersediaan size tergantung stok per produk, cek di data produk terbaru.",
+    "category": "stock"
+  },
+  {
+    "id": "f5",
+    "question": "Bisa bayar COD?",
+    "answer": "Saat ini pembayaran COD belum tersedia.",
+    "category": "payment"
+  },
+  {
+    "id": "f6",
+    "question": "Apakah ada diskon mahasiswa?",
+    "answer": "Belum ada diskon khusus mahasiswa, tetapi promo umum bisa tersedia sewaktu-waktu.",
+    "category": "promo"
+  },
+  {
+    "id": "f7",
+    "question": "Berapa lama pengiriman?",
+    "answer": "Estimasi pengiriman 2-5 hari kerja tergantung lokasi.",
+    "category": "shipping"
+  },
+  {
+    "id": "f8",
+    "question": "Apakah bisa tukar ukuran?",
+    "answer": "Bisa tukar ukuran selama stok tersedia dan mengikuti syarat penukaran.",
+    "category": "policy"
+  }
+]
