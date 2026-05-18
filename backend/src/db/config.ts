@@ -84,6 +84,18 @@ async function seedData() {
 // 3. Fungsi untuk membuat Struktur Tabel (Hanya tereksekusi jika tabel belum ada)
 async function setupTables() {
   try {
+    // 0. Buat Tipe ENUM jika belum ada (PostgreSQL)
+    await sql`
+      DO $$ BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'session_status') THEN
+          CREATE TYPE session_status AS ENUM ('active', 'finished');
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'message_sender') THEN
+          CREATE TYPE message_sender AS ENUM ('user', 'bot');
+        END IF;
+      END $$;
+    `;
+
     // Tabel Users
     await sql`
       CREATE TABLE IF NOT EXISTS users (
@@ -99,7 +111,7 @@ async function setupTables() {
       CREATE TABLE IF NOT EXISTS sessions (
         id_session UUID PRIMARY KEY,
         user_id BIGINT REFERENCES users(id) ON DELETE CASCADE,
-        status VARCHAR(50) DEFAULT 'active', -- 'active' atau 'finished'
+        status session_status DEFAULT 'active', -- 'active' atau 'finished'
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
@@ -110,10 +122,32 @@ async function setupTables() {
       CREATE TABLE IF NOT EXISTS messages (
         id SERIAL PRIMARY KEY,
         session_id UUID REFERENCES sessions(id_session) ON DELETE CASCADE,
-        sender VARCHAR(50), -- 'user' atau 'bot'
+        sender message_sender, -- 'user' atau 'bot'
         content TEXT,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
+    `;
+
+    // --- MIGRASI OTOMATIS: Ubah VARCHAR ke ENUM jika tabel sudah ada sebelumnya ---
+    await sql`
+      DO $$ BEGIN
+        -- Migrasi kolom 'status' di tabel 'sessions'
+        IF EXISTS (
+          SELECT 1 FROM information_schema.columns 
+          WHERE table_name = 'sessions' AND column_name = 'status' AND data_type = 'character varying'
+        ) THEN
+          ALTER TABLE sessions ALTER COLUMN status TYPE session_status USING status::session_status;
+          ALTER TABLE sessions ALTER COLUMN status SET DEFAULT 'active';
+        END IF;
+
+        -- Migrasi kolom 'sender' di tabel 'messages'
+        IF EXISTS (
+          SELECT 1 FROM information_schema.columns 
+          WHERE table_name = 'messages' AND column_name = 'sender' AND data_type = 'character varying'
+        ) THEN
+          ALTER TABLE messages ALTER COLUMN sender TYPE message_sender USING sender::message_sender;
+        END IF;
+      END $$;
     `;
 
     // Tabel Ratings (Relasi 1 to 1 dengan Session)
@@ -137,7 +171,7 @@ async function setupTables() {
       );
     `;
 
-    console.log('✅ Struktur Tabel PostgreSQL sudah siap dan tervalidasi.');
+    console.log('✅ Struktur Tabel PostgreSQL (dengan ENUM) sudah siap dan tervalidasi.');
     
     // Panggil fungsi seedData setelah tabel siap
     await seedData();
