@@ -10,7 +10,8 @@ export async function loadDataset() {
     
     // Ambil data knowledge dari database berdasarkan target
     const knowledgeData = await sql`
-      SELECT type, content FROM knowledge WHERE dataset_target = ${env.DATASET_TARGET}
+      SELECT reference_id, type, data FROM knowledge 
+      WHERE dataset_target = ${env.DATASET_TARGET} AND is_active = TRUE
     `;
     
     if (knowledgeData.length === 0) {

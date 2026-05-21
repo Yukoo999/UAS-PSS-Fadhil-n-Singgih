@@ -219,7 +219,7 @@ export async function handleTelegramUpdate(update: any, dataset: any) {
       if (env.ENABLE_GEMINI) {
         // Format knowledge dari database
         const knowledgeText = Array.isArray(dataset) && dataset.length > 0
-          ? dataset.map((k: any) => `- [${k.type}]: ${k.content}`).join('\n')
+          ? dataset.map((k: any) => `- [${k.type}] (ID: ${k.reference_id}): ${JSON.stringify(k.data)}`).join('\n')
           : 'Tidak ada data knowledge tersedia.';
 
         const systemInstruction = `

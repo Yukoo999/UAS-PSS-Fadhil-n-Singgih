@@ -47,30 +47,50 @@ async function seedData() {
     const knowledgePath = path.join(dataDir, 'knowledge.json');
     if (fs.existsSync(knowledgePath)) {
       const items = JSON.parse(fs.readFileSync(knowledgePath, 'utf-8'));
-      for (const item of items) {
-        await sql`INSERT INTO knowledge (dataset_target, type, content) VALUES (${target}, ${item.type}, ${item.content})`;
+      for (let i = 0; i < items.length; i++) {
+        const item = items[i];
+        const refId = `KNOW-${String(i+1).padStart(3, '0')}`;
+        // postgres.js automatically converts objects to JSON for json/jsonb columns
+        await sql`
+          INSERT INTO knowledge (reference_id, dataset_target, type, data) 
+          VALUES (${refId}, ${target}, ${item.type}, ${item})
+          ON CONFLICT (reference_id) DO UPDATE 
+          SET data = EXCLUDED.data, updated_at = CURRENT_TIMESTAMP
+        `;
       }
       console.log(`  ✅ knowledge.json (${items.length} item) berhasil di-seed`);
     }
 
-    // 2. Seed products.json → ubah ke format knowledge
+    // 2. Seed products.json
     const productsPath = path.join(dataDir, 'products.json');
     if (fs.existsSync(productsPath)) {
       const products = JSON.parse(fs.readFileSync(productsPath, 'utf-8'));
-      for (const p of products) {
-        const content = `Produk: ${p.name} | Kategori: ${p.category} | Style: ${p.style} | Ukuran: ${p.size} | Warna: ${p.color} | Harga: Rp${p.price.toLocaleString('id-ID')} | Stok: ${p.stock} | Deskripsi: ${p.description}`;
-        await sql`INSERT INTO knowledge (dataset_target, type, content) VALUES (${target}, 'product', ${content})`;
+      for (let i = 0; i < products.length; i++) {
+        const p = products[i];
+        const refId = `PROD-${String(i+1).padStart(3, '0')}`;
+        await sql`
+          INSERT INTO knowledge (reference_id, dataset_target, type, data) 
+          VALUES (${refId}, ${target}, 'product', ${p})
+          ON CONFLICT (reference_id) DO UPDATE 
+          SET data = EXCLUDED.data, updated_at = CURRENT_TIMESTAMP
+        `;
       }
       console.log(`  ✅ products.json (${products.length} produk) berhasil di-seed`);
     }
 
-    // 3. Seed faq.json → ubah ke format knowledge
+    // 3. Seed faq.json
     const faqPath = path.join(dataDir, 'faq.json');
     if (fs.existsSync(faqPath)) {
       const faqs = JSON.parse(fs.readFileSync(faqPath, 'utf-8'));
-      for (const f of faqs) {
-        const content = `Pertanyaan: ${f.question} | Jawaban: ${f.answer}`;
-        await sql`INSERT INTO knowledge (dataset_target, type, content) VALUES (${target}, 'faq', ${content})`;
+      for (let i = 0; i < faqs.length; i++) {
+        const f = faqs[i];
+        const refId = `FAQ-${String(i+1).padStart(3, '0')}`;
+        await sql`
+          INSERT INTO knowledge (reference_id, dataset_target, type, data) 
+          VALUES (${refId}, ${target}, 'faq', ${f})
+          ON CONFLICT (reference_id) DO UPDATE 
+          SET data = EXCLUDED.data, updated_at = CURRENT_TIMESTAMP
+        `;
       }
       console.log(`  ✅ faq.json (${faqs.length} FAQ) berhasil di-seed`);
     }
@@ -147,6 +167,20 @@ async function setupTables() {
         ) THEN
           ALTER TABLE messages ALTER COLUMN sender TYPE message_sender USING sender::message_sender;
         END IF;
+
+        -- Migrasi tabel 'knowledge' (Ubah content TEXT menjadi data JSONB)
+        IF EXISTS (
+          SELECT 1 FROM information_schema.columns 
+          WHERE table_name = 'knowledge' AND column_name = 'content' AND data_type = 'text'
+        ) THEN
+          -- Hapus data lama karena strukturnya sudah berbeda jauh
+          TRUNCATE TABLE knowledge;
+          ALTER TABLE knowledge DROP COLUMN content;
+          ALTER TABLE knowledge ADD COLUMN reference_id VARCHAR(100) UNIQUE;
+          ALTER TABLE knowledge ADD COLUMN data JSONB;
+          ALTER TABLE knowledge ADD COLUMN is_active BOOLEAN DEFAULT TRUE;
+          ALTER TABLE knowledge ADD COLUMN updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
+        END IF;
       END $$;
     `;
 
@@ -164,10 +198,13 @@ async function setupTables() {
     await sql`
       CREATE TABLE IF NOT EXISTS knowledge (
         id SERIAL PRIMARY KEY,
+        reference_id VARCHAR(100) UNIQUE,
         dataset_target VARCHAR(50), -- 'toko_baju' atau 'diskominfo'
         type VARCHAR(50),
-        content TEXT,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        data JSONB,
+        is_active BOOLEAN DEFAULT TRUE,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     `;
 
