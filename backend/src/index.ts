@@ -1,7 +1,7 @@
 import { Hono, Context } from 'hono';
 import { env } from './config/env'; 
 import { loadDataset, datasetMemori } from './services/datasetService';
-import { initDatabase } from './db/config';
+import { initDatabase, sql } from './db/config';
 import { handleTelegramUpdate, setupBotCommands } from './bot/handler';
 
 // 1. Inisialisasi Hono (Ganti Express/Polling)
@@ -79,6 +79,27 @@ app.post('/webhook', async (c: Context) => {
 
 // Root route untuk monitoring sederhana
 app.get('/', (c: Context) => c.text('Bot Admin Diskominfo is Online! 🚀'));
+
+// Endpoint untuk menerima sinkronisasi dari Google Sheets
+app.post('/api/sync-sheets', async (c: Context) => {
+  try {
+    const items = await c.req.json();
+    for (const item of items) {
+      const dataJsonb = { question: item.question, answer: item.answer };
+      await sql`
+        INSERT INTO knowledge (reference_id, dataset_target, type, data, is_active)
+        VALUES (${item.reference_id}, ${env.DATASET_TARGET}, ${item.type}, ${dataJsonb}, ${item.is_active})
+        ON CONFLICT (reference_id) DO UPDATE 
+        SET type = EXCLUDED.type, data = EXCLUDED.data, is_active = EXCLUDED.is_active, updated_at = CURRENT_TIMESTAMP
+      `;
+    }
+    await loadDataset(); 
+    return c.json({ ok: true, message: "Sinkronisasi Berhasil!" }, 200);
+  } catch (err: any) {
+    console.error("❌ Error Sync Sheets:", err.message);
+    return c.json({ ok: false, error: err.message }, 500);
+  }
+});
 
 // Export untuk Bun
 export default {

@@ -35,11 +35,11 @@ async function seedData() {
     const dataDir = path.join(process.cwd(), 'src', 'db', 'data', target);
 
     // Cek apakah sudah ada data untuk target ini
-    const existingCount = await sql`SELECT count(*) FROM knowledge WHERE dataset_target = ${target}`;
-    if (existingCount[0].count !== '0') {
-      console.log(`ℹ️ Knowledge untuk [${target}] sudah ada di database, skip seeding.`);
-      return;
-    }
+     const existingCount = await sql`SELECT count(*) FROM knowledge WHERE dataset_target = ${target}`;
+     if (existingCount[0].count !== '0') {
+       console.log(`ℹ️ Knowledge untuk [${target}] sudah ada di database, skip seeding.`);
+       return;
+     }
 
     console.log(`🌱 Seeding knowledge untuk [${target}]...`);
 
