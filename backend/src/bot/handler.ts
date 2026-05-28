@@ -10,12 +10,12 @@ const genAI = new GoogleGenerativeAI(env.GEMINI_API_KEY);
 // Di dalam handler.ts
 async function sendTelegramMessage(chatId: number, text: string, reply_markup?: any) {
   const url = `https://api.telegram.org/bot${env.TELEGRAM_BOT_TOKEN}/sendMessage`;
-  const body: any = { 
-    chat_id: chatId, 
+  const body: any = {
+    chat_id: chatId,
     text: text,
     disable_web_page_preview: true
   };
-  
+
   if (reply_markup) {
     body.reply_markup = reply_markup;
   }
@@ -25,7 +25,7 @@ async function sendTelegramMessage(chatId: number, text: string, reply_markup?: 
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body)
   });
-  
+
   if (!res.ok) {
     const errorData = await res.json();
     console.error("❌ Telegram API Error:", errorData);
@@ -163,7 +163,7 @@ export async function handleTelegramUpdate(update: any, dataset: any) {
       WHERE user_id = ${userId} AND status = 'active' 
       ORDER BY created_at DESC LIMIT 1;
     `;
-    
+
     let sessionId: string;
     if (session.length === 0) {
       // Jika tidak ada sesi aktif, buat sesi baru menggunakan UUID v7
@@ -236,7 +236,7 @@ ${knowledgeText}
 5. Untuk pertanyaan STOK/HARGA/UKURAN: jawab persis sesuai data.
 6. Untuk KEBIJAKAN (retur, ongkir, COD): jawab sesuai FAQ.
 7. Jika stok produk ≤ 3, ingatkan stok hampir habis.
-8. Jika pertanyaan di luar konteks toko baju, tolak sopan: "Maaf kak, saya hanya membantu seputar produk toko kami 😊"
+8. Jika pertanyaan di luar konteks toko baju, tolak sopan: "Maaf kak, saya hanya membantu seputar produk toko kami 😊". Namun jika jawaban dari pertanyaan user ada diluar konteks toko baju namun terdapat didalam knowledge jawab saja sesuai yang ada di knowledge tanpa perlu membahas tentang toko baju.
 9. Gunakan sapaan "Kak". Jawaban natural, singkat, dan mengalir. Maksimal 4 kalimat.
 `;
 
