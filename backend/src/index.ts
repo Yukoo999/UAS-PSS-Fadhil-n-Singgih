@@ -46,13 +46,13 @@ console.log('-------------------------------------------');
 console.log("ℹ️ Server mode:", "Telegram Webhook (Hono + Bun)");
 console.log("ℹ️ Gemini enabled:", String(env.ENABLE_GEMINI));
 
-// A. Load Dataset ke RAM (Optimasi Performa)
-await loadDataset(); // Mengeksekusi fungsi baca dari db
-console.log("ℹ️ Dataset Status:", `Loaded [${env.DATASET_TARGET}] into memory`);
-
-// B. Inisialisasi Database PostgreSQL
+// A. Inisialisasi Database PostgreSQL (HARUS PERTAMA agar tabel sudah ada)
 await initDatabase();
 console.log("ℹ️ Database Status:", "PostgreSQL connected & Ready");
+
+// B. Load Dataset ke RAM (Optimasi Performa) - setelah tabel siap
+await loadDataset(); // Mengeksekusi fungsi baca dari db
+console.log("ℹ️ Dataset Status:", `Loaded [${env.DATASET_TARGET}] into memory`);
 
 // C. Daftarkan command menu ke Telegram
 await setupBotCommands();
