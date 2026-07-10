@@ -27,7 +27,13 @@ app.use('*', async (c, next) => {
 });
 
 // B. CORS untuk semua endpoint (agar dashboard bisa mengakses API dari browser)
-app.use('*', cors());
+app.use('*', cors({
+  origin: '*',
+  allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowHeaders: ['Authorization', 'Content-Type'],
+  exposeHeaders: ['Content-Length'],
+  maxAge: 600,
+}));
 
 // C. Bearer Auth khusus untuk Endpoint Admin /api/*
 app.use('/api/*', bearerAuth({ token: env.ADMIN_API_KEY }));
