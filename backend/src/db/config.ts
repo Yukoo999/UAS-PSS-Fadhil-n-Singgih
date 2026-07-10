@@ -2,9 +2,11 @@ import postgres from 'postgres';
 import { env } from '../config/env';
 
 // 1. Membuat koneksi ke PostgreSQL menggunakan URL dari .env
+// SSL diaktifkan untuk kompatibilitas dengan Railway & cloud PostgreSQL
 export const sql = postgres(env.DATABASE_URL, {
   max: 10, // Maksimal koneksi simultan (Connection pool)
   idle_timeout: 20, // Tutup koneksi jika tidak ada aktivitas selama 20 detik
+  ssl: env.DATABASE_URL.includes('railway') ? { rejectUnauthorized: false } : false,
 });
 
 // 2. Fungsi inisialisasi yang dipanggil di index.ts
@@ -20,8 +22,10 @@ export async function initDatabase() {
 
   } catch (error: any) {
     console.error('❌ Gagal terhubung ke database!');
-    console.error('Alasan:', error.message);
-    console.error('Pastikan password di .env benar dan PostgreSQL sedang berjalan.');
+    console.error('Alasan:', error?.message || error?.code || JSON.stringify(error));
+    console.error('Detail error:', error);
+    console.error('DATABASE_URL prefix:', env.DATABASE_URL?.substring(0, 30) + '...');
+    console.error('Pastikan DATABASE_URL di variabel Railway sudah benar.');
     process.exit(1); // Matikan aplikasi jika database gagal terhubung
   }
 }
