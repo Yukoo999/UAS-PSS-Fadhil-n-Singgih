@@ -35,7 +35,11 @@ app.use('*', cors({
   maxAge: 600,
 }));
 
-// C. Bearer Auth khusus untuk Endpoint Admin /api/*
+// C. Handle CORS Preflight (OPTIONS) untuk semua route /api/* SEBELUM bearerAuth
+// Browser mengirim OPTIONS request tanpa Authorization header, jadi perlu di-handle terlebih dahulu
+app.options('/api/*', (c) => c.text('', 204));
+
+// D. Bearer Auth khusus untuk Endpoint Admin /api/*
 app.use('/api/*', bearerAuth({ token: env.ADMIN_API_KEY }));
 
 // 2. Validasi Token 
