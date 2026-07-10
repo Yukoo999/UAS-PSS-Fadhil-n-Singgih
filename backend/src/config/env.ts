@@ -18,4 +18,7 @@ export const env = {
 
   // Konfigurasi Dataset Modular (Plug & Play)
   DATASET_TARGET: process.env.DATASET_TARGET || "toko_baju", // Ganti ke "diskominfo" saat migrasi
+
+  // Token Auth untuk REST API Admin
+  ADMIN_API_KEY: process.env.ADMIN_API_KEY || "uas_secret_token_2026",
 };

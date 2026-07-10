@@ -12,12 +12,12 @@ export async function initDatabase() {
   try {
     console.log('⏳ Sedang mencoba terhubung ke database...');
     // Coba eksekusi query sederhana
-    await sql`SELECT 1`; 
+    await sql`SELECT 1`;
     console.log('✅ Berhasil terhubung ke PostgreSQL!');
 
     // Otomatis mengecek dan membuat tabel jika belum ada
     await setupTables();
-    
+
   } catch (error: any) {
     console.error('❌ Gagal terhubung ke database!');
     console.error('Alasan:', error.message);
@@ -35,11 +35,11 @@ async function seedData() {
     const dataDir = path.join(process.cwd(), 'src', 'db', 'data', target);
 
     // Cek apakah sudah ada data untuk target ini
-     const existingCount = await sql`SELECT count(*) FROM knowledge WHERE dataset_target = ${target}`;
-     if (existingCount[0].count !== '0') {
-       console.log(`ℹ️ Knowledge untuk [${target}] sudah ada di database, skip seeding.`);
-       return;
-     }
+    const existingCount = await sql`SELECT count(*) FROM knowledge WHERE dataset_target = ${target}`;
+    if (existingCount[0].count !== '0') {
+      console.log(`ℹ️ Knowledge untuk [${target}] sudah ada di database, skip seeding.`);
+      return;
+    }
 
     console.log(`🌱 Seeding knowledge untuk [${target}]...`);
 
@@ -49,7 +49,7 @@ async function seedData() {
       const items = JSON.parse(fs.readFileSync(knowledgePath, 'utf-8'));
       for (let i = 0; i < items.length; i++) {
         const item = items[i];
-        const refId = `KNOW-${String(i+1).padStart(3, '0')}`;
+        const refId = `KNOW-${String(i + 1).padStart(3, '0')}`;
         // postgres.js automatically converts objects to JSON for json/jsonb columns
         await sql`
           INSERT INTO knowledge (reference_id, dataset_target, type, data) 
@@ -67,7 +67,7 @@ async function seedData() {
       const products = JSON.parse(fs.readFileSync(productsPath, 'utf-8'));
       for (let i = 0; i < products.length; i++) {
         const p = products[i];
-        const refId = `PROD-${String(i+1).padStart(3, '0')}`;
+        const refId = `PROD-${String(i + 1).padStart(3, '0')}`;
         await sql`
           INSERT INTO knowledge (reference_id, dataset_target, type, data) 
           VALUES (${refId}, ${target}, 'product', ${p})
@@ -84,7 +84,7 @@ async function seedData() {
       const faqs = JSON.parse(fs.readFileSync(faqPath, 'utf-8'));
       for (let i = 0; i < faqs.length; i++) {
         const f = faqs[i];
-        const refId = `FAQ-${String(i+1).padStart(3, '0')}`;
+        const refId = `FAQ-${String(i + 1).padStart(3, '0')}`;
         await sql`
           INSERT INTO knowledge (reference_id, dataset_target, type, data) 
           VALUES (${refId}, ${target}, 'faq', ${f})
@@ -209,7 +209,7 @@ async function setupTables() {
     `;
 
     console.log('✅ Struktur Tabel PostgreSQL (dengan ENUM) sudah siap dan tervalidasi.');
-    
+
     // Panggil fungsi seedData setelah tabel siap
     await seedData();
   } catch (error: any) {

@@ -1,0 +1,215 @@
+{
+	"info": {
+		"_postman_id": "8a7c29bb-5d12-4f30-8a9d-12ab34cd56ef",
+		"name": "Chatbot Admin API (UAS)",
+		"description": "Postman Collection untuk pengujian REST API pada aplikasi Chatbot AI Diskominfo Kota Semarang.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "1. Check Server Status",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						""
+					]
+				},
+				"description": "Endpoint publik untuk memantau apakah server menyala."
+			},
+			"response": []
+		},
+		{
+			"name": "2. Get All Ratings",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{apiKey}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/api/ratings?page=1&limit=10",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"ratings"
+					],
+					"query": [
+						{
+							"key": "page",
+							"value": "1",
+							"description": "Halaman ke-n"
+						},
+						{
+							"key": "limit",
+							"value": "10",
+							"description": "Maksimal data per halaman"
+						}
+					]
+				},
+				"description": "Mengambil ulasan bintang dari pengguna Telegram."
+			},
+			"response": []
+		},
+		{
+			"name": "3. Get All Sessions",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{apiKey}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/api/sessions?page=1&limit=10&status=finished",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"sessions"
+					],
+					"query": [
+						{
+							"key": "page",
+							"value": "1"
+						},
+						{
+							"key": "limit",
+							"value": "10"
+						},
+						{
+							"key": "status",
+							"value": "finished",
+							"description": "Filter status: active atau finished (opsional)"
+						}
+					]
+				},
+				"description": "Mengambil daftar sesi chat."
+			},
+			"response": []
+		},
+		{
+			"name": "4. Get Messages by Session ID",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{apiKey}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/api/sessions/ganti-dengan-session-id-kamu/messages",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"sessions",
+						"ganti-dengan-session-id-kamu",
+						"messages"
+					]
+				},
+				"description": "Mengambil transkrip percakapan lengkap dari suatu sesi chat (ganti bagian path ID)."
+			},
+			"response": []
+		},
+		{
+			"name": "5. Sync Sheets (Google Sheets Mock)",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{apiKey}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "[\n  {\n    \"reference_id\": \"FAQ-UAS-01\",\n    \"type\": \"faq\",\n    \"question\": \"Apakah bot ini bisa digunakan untuk UAS?\",\n    \"answer\": \"Tentu saja! Bot ini sudah dikembangkan sesuai kriteria UAS backend.\",\n    \"is_active\": true\n  }\n]"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/api/sync-sheets",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"sync-sheets"
+					]
+				},
+				"description": "Simulasi request Google Sheets ke API Sinkronisasi backend."
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:3000",
+			"type": "string"
+		},
+		{
+			"key": "apiKey",
+			"value": "uas_secret_token_2026",
+			"type": "string"
+		}
+	]
+}

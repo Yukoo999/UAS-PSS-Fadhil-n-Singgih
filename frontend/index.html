@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="id" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard - Chatbot AI Diskominfo</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body { font-family: 'Outfit', sans-serif; background: radial-gradient(circle at top right, #111827, #030712); }
+    .glass { background: rgba(17, 24, 39, 0.7); backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.08); }
+    .text-glow { text-shadow: 0 0 10px rgba(99, 102, 241, 0.5); }
+    .tab-btn.active { background: rgba(99, 102, 241, 0.15); border-color: rgba(99, 102, 241, 0.4); color: #a5b4fc; }
+    .modal-overlay { background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(4px); }
+    .chat-user { background: #4f46e5; border-radius: 12px 12px 4px 12px; }
+    .chat-bot { background: #1e293b; border: 1px solid #334155; border-radius: 12px 12px 12px 4px; }
+  </style>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: { extend: { colors: { brand: { 50:'#eef2ff', 100:'#e0e7ff', 500:'#6366f1', 600:'#4f46e5', 700:'#4338ca' } } } }
+    }
+  </script>
+</head>
+<body class="min-h-screen text-slate-100 p-4 md:p-8">
+<div class="max-w-7xl mx-auto w-full space-y-5">
+
+  <!-- Header -->
+  <header class="glass rounded-2xl p-5 flex flex-col md:flex-row justify-between items-center gap-4 shadow-xl">
+    <div class="flex items-center gap-3">
+      <div class="p-3 bg-brand-500/10 rounded-xl border border-brand-500/20 text-brand-500">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-7 h-7"><path stroke-linecap="round" stroke-linejoin="round" d="M8.625 12a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H8.25m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H12m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 0 1-2.555-.337A5.972 5.972 0 0 1 5.41 20.97a5.969 5.969 0 0 1-.474-.065 4.48 4.48 0 0 0 .978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25Z"/></svg>
+      </div>
+      <div>
+        <h1 class="text-xl font-bold tracking-tight text-glow">Admin Dashboard</h1>
+        <p class="text-xs text-slate-400">Chatbot AI Diskominfo — Monitoring & CRUD</p>
+      </div>
+    </div>
+    <div class="flex items-center gap-3">
+      <div class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs">
+        <span id="status-dot" class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+        <span id="server-status">Menghubungkan...</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Config Card -->
+  <div class="glass rounded-2xl p-5 shadow-lg">
+    <div class="flex flex-col md:flex-row gap-3 items-end">
+      <div class="flex-1">
+        <label class="block text-xs text-slate-400 mb-1">Backend URL</label>
+        <input type="text" id="config-url" class="w-full bg-slate-900/50 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-brand-500" value="http://localhost:3000">
+      </div>
+      <div class="flex-1">
+        <label class="block text-xs text-slate-400 mb-1">Bearer API Key</label>
+        <input type="password" id="config-token" class="w-full bg-slate-900/50 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-brand-500" value="uas_secret_token_2026">
+      </div>
+      <button onclick="connectAndSync()" class="px-5 py-2 bg-brand-600 hover:bg-brand-500 text-white font-medium rounded-lg text-sm transition-all shadow-lg shadow-brand-500/20 active:scale-95 whitespace-nowrap">Hubungkan</button>
+    </div>
+  </div>
+
+  <!-- Stats Row -->
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+    <div class="glass rounded-xl p-4 text-center">
+      <p class="text-2xl font-black text-brand-500" id="stat-users">0</p>
+      <p class="text-xs text-slate-400 mt-1">Total Users</p>
+    </div>
+    <div class="glass rounded-xl p-4 text-center">
+      <p class="text-2xl font-black text-emerald-400" id="stat-sessions">0</p>
+      <p class="text-xs text-slate-400 mt-1">Total Sessions</p>
+    </div>
+    <div class="glass rounded-xl p-4 text-center">
+      <p class="text-2xl font-black text-amber-400" id="stat-ratings-avg">0.00</p>
+      <p class="text-xs text-slate-400 mt-1">Rata-rata Rating</p>
+    </div>
+    <div class="glass rounded-xl p-4 text-center">
+      <p class="text-2xl font-black text-rose-400" id="stat-knowledge">0</p>
+      <p class="text-xs text-slate-400 mt-1">Knowledge Items</p>
+    </div>
+  </div>
+
+  <!-- Tab Navigation -->
+  <div class="flex gap-2 overflow-x-auto pb-1">
+    <button onclick="switchTab('dashboard')" id="tab-dashboard" class="tab-btn active px-4 py-2 text-xs font-semibold rounded-lg border border-slate-700 text-slate-300 hover:text-white transition-all whitespace-nowrap">📊 Dashboard</button>
+    <button onclick="switchTab('users')" id="tab-users" class="tab-btn px-4 py-2 text-xs font-semibold rounded-lg border border-slate-700 text-slate-300 hover:text-white transition-all whitespace-nowrap">👤 Users</button>
+    <button onclick="switchTab('sessions')" id="tab-sessions" class="tab-btn px-4 py-2 text-xs font-semibold rounded-lg border border-slate-700 text-slate-300 hover:text-white transition-all whitespace-nowrap">💬 Sessions</button>
+    <button onclick="switchTab('knowledge')" id="tab-knowledge" class="tab-btn px-4 py-2 text-xs font-semibold rounded-lg border border-slate-700 text-slate-300 hover:text-white transition-all whitespace-nowrap">📚 Knowledge</button>
+    <button onclick="switchTab('ratings')" id="tab-ratings" class="tab-btn px-4 py-2 text-xs font-semibold rounded-lg border border-slate-700 text-slate-300 hover:text-white transition-all whitespace-nowrap">⭐ Ratings</button>
+  </div>
+
+  <!-- TAB CONTENT: DASHBOARD -->
+  <div id="content-dashboard" class="tab-content grid grid-cols-1 lg:grid-cols-2 gap-5">
+    <div class="glass rounded-2xl p-5 shadow-lg">
+      <h2 class="text-lg font-semibold mb-3">Grafik Distribusi Rating</h2>
+      <div class="h-48"><canvas id="ratingChart"></canvas></div>
+    </div>
+    <div class="glass rounded-2xl p-5 shadow-lg flex flex-col h-[350px]">
+      <h2 class="text-lg font-semibold mb-2">Transkrip Chat</h2>
+      <p class="text-xs text-slate-400 mb-3" id="chat-title">Klik "Lihat Chat" di tab Sessions untuk memuat percakapan.</p>
+      <div id="chat-bubbles" class="flex-1 overflow-y-auto space-y-3 pr-2 text-slate-500 text-sm flex flex-col justify-center items-center">
+        Belum ada sesi yang dipilih.
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB CONTENT: USERS -->
+  <div id="content-users" class="tab-content hidden">
+    <div class="glass rounded-2xl p-5 shadow-lg">
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="text-lg font-bold">Manajemen Users</h2>
+        <div class="flex gap-2">
+          <input type="text" id="users-search" onkeyup="if(event.key==='Enter') loadUsers(1)" placeholder="Cari user..." class="bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1 text-xs text-slate-300 focus:outline-none">
+          <button onclick="loadUsers(1)" class="px-3 py-1 bg-brand-600 hover:bg-brand-500 text-white rounded-lg text-xs transition-all">Cari</button>
+        </div>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-sm text-slate-300">
+          <thead class="text-xs text-slate-400 uppercase border-b border-slate-800">
+            <tr><th class="py-3">ID</th><th class="py-3">Username</th><th class="py-3">Nama</th><th class="py-3">Tanggal Daftar</th><th class="py-3 text-right">Aksi</th></tr>
+          </thead>
+          <tbody id="users-tbody" class="divide-y divide-slate-900"><tr><td colspan="5" class="text-center py-8 text-slate-500">Belum terhubung.</td></tr></tbody>
+        </table>
+      </div>
+      <div class="flex justify-between items-center mt-4 pt-3 border-t border-slate-800 text-xs">
+        <span id="users-page-info" class="text-slate-400"></span>
+        <div class="flex gap-2">
+          <button onclick="loadUsers(usersPage-1)" id="users-prev" disabled class="px-3 py-1 rounded bg-slate-800 border border-slate-700 disabled:opacity-30 hover:bg-slate-700 text-xs">Prev</button>
+          <button onclick="loadUsers(usersPage+1)" id="users-next" disabled class="px-3 py-1 rounded bg-slate-800 border border-slate-700 disabled:opacity-30 hover:bg-slate-700 text-xs">Next</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB CONTENT: SESSIONS -->
+  <div id="content-sessions" class="tab-content hidden">
+    <div class="glass rounded-2xl p-5 shadow-lg">
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="text-lg font-bold">Manajemen Sessions</h2>
+        <div class="flex gap-2">
+          <input type="text" id="sess-search" onkeyup="if(event.key==='Enter') loadSessions(1)" placeholder="Cari user..." class="bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1 text-xs text-slate-300 focus:outline-none">
+          <select id="sess-filter" onchange="loadSessions(1)" class="bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1 text-xs text-slate-300 focus:outline-none">
+            <option value="">Semua</option><option value="active">Aktif</option><option value="finished">Selesai</option>
+          </select>
+          <button onclick="loadSessions(1)" class="px-3 py-1 bg-brand-600 hover:bg-brand-500 text-white rounded-lg text-xs transition-all">Cari</button>
+        </div>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-sm text-slate-300">
+          <thead class="text-xs text-slate-400 uppercase border-b border-slate-800">
+            <tr><th class="py-3">User</th><th class="py-3">Status</th><th class="py-3">Pesan</th><th class="py-3">Terakhir</th><th class="py-3 text-right">Aksi</th></tr>
+          </thead>
+          <tbody id="sess-tbody" class="divide-y divide-slate-900"><tr><td colspan="5" class="text-center py-8 text-slate-500">Belum terhubung.</td></tr></tbody>
+        </table>
+      </div>
+      <div class="flex justify-between items-center mt-4 pt-3 border-t border-slate-800 text-xs">
+        <span id="sess-page-info" class="text-slate-400"></span>
+        <div class="flex gap-2">
+          <button onclick="loadSessions(sessPage-1)" id="sess-prev" disabled class="px-3 py-1 rounded bg-slate-800 border border-slate-700 disabled:opacity-30 hover:bg-slate-700 text-xs">Prev</button>
+          <button onclick="loadSessions(sessPage+1)" id="sess-next" disabled class="px-3 py-1 rounded bg-slate-800 border border-slate-700 disabled:opacity-30 hover:bg-slate-700 text-xs">Next</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB CONTENT: KNOWLEDGE -->
+  <div id="content-knowledge" class="tab-content hidden">
+    <div class="glass rounded-2xl p-5 shadow-lg">
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="text-lg font-bold">Manajemen Knowledge</h2>
+        <div class="flex gap-2">
+          <input type="text" id="know-search" onkeyup="if(event.key==='Enter') loadKnowledge(1)" placeholder="Cari ref/tanya..." class="bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1 text-xs text-slate-300 focus:outline-none">
+          <select id="know-filter" onchange="loadKnowledge(1)" class="bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1 text-xs text-slate-300 focus:outline-none">
+            <option value="">Semua Tipe</option><option value="faq">FAQ</option><option value="product">Product</option>
+          </select>
+          <button onclick="loadKnowledge(1)" class="px-3 py-1 bg-brand-600 hover:bg-brand-500 text-white rounded-lg text-xs transition-all">Cari</button>
+          <button onclick="openKnowledgeModal()" class="px-3 py-1 bg-brand-600 hover:bg-brand-500 text-white rounded-lg text-xs font-semibold transition-all">+ Tambah</button>
+        </div>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-sm text-slate-300">
+          <thead class="text-xs text-slate-400 uppercase border-b border-slate-800">
+            <tr><th class="py-3">ID</th><th class="py-3">Ref ID</th><th class="py-3">Tipe</th><th class="py-3">Data</th><th class="py-3">Aktif</th><th class="py-3 text-right">Aksi</th></tr>
+          </thead>
+          <tbody id="know-tbody" class="divide-y divide-slate-900"><tr><td colspan="6" class="text-center py-8 text-slate-500">Belum terhubung.</td></tr></tbody>
+        </table>
+      </div>
+      <div class="flex justify-between items-center mt-4 pt-3 border-t border-slate-800 text-xs">
+        <span id="know-page-info" class="text-slate-400"></span>
+        <div class="flex gap-2">
+          <button onclick="loadKnowledge(knowPage-1)" id="know-prev" disabled class="px-3 py-1 rounded bg-slate-800 border border-slate-700 disabled:opacity-30 hover:bg-slate-700 text-xs">Prev</button>
+          <button onclick="loadKnowledge(knowPage+1)" id="know-next" disabled class="px-3 py-1 rounded bg-slate-800 border border-slate-700 disabled:opacity-30 hover:bg-slate-700 text-xs">Next</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB CONTENT: RATINGS -->
+  <div id="content-ratings" class="tab-content hidden">
+    <div class="glass rounded-2xl p-5 shadow-lg">
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="text-lg font-bold">Manajemen Ratings</h2>
+        <div class="flex gap-2">
+          <input type="text" id="ratings-search" onkeyup="if(event.key==='Enter') loadRatings(1)" placeholder="Cari user..." class="bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1 text-xs text-slate-300 focus:outline-none">
+          <button onclick="loadRatings(1)" class="px-3 py-1 bg-brand-600 hover:bg-brand-500 text-white rounded-lg text-xs transition-all">Cari</button>
+        </div>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-sm text-slate-300">
+          <thead class="text-xs text-slate-400 uppercase border-b border-slate-800">
+            <tr><th class="py-3">ID</th><th class="py-3">User</th><th class="py-3">Skor</th><th class="py-3">Tanggal</th><th class="py-3 text-right">Aksi</th></tr>
+          </thead>
+          <tbody id="ratings-tbody" class="divide-y divide-slate-900"><tr><td colspan="5" class="text-center py-8 text-slate-500">Belum terhubung.</td></tr></tbody>
+        </table>
+      </div>
+      <div class="flex justify-between items-center mt-4 pt-3 border-t border-slate-800 text-xs">
+        <span id="ratings-page-info" class="text-slate-400"></span>
+        <div class="flex gap-2">
+          <button onclick="loadRatings(ratingsPage-1)" id="ratings-prev" disabled class="px-3 py-1 rounded bg-slate-800 border border-slate-700 disabled:opacity-30 hover:bg-slate-700 text-xs">Prev</button>
+          <button onclick="loadRatings(ratingsPage+1)" id="ratings-next" disabled class="px-3 py-1 rounded bg-slate-800 border border-slate-700 disabled:opacity-30 hover:bg-slate-700 text-xs">Next</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- MODAL: Knowledge Create/Edit -->
+<div id="knowledge-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center modal-overlay">
+  <div class="glass rounded-2xl p-6 w-full max-w-lg mx-4 shadow-2xl">
+    <h3 class="text-lg font-bold mb-4" id="modal-title">Tambah Knowledge</h3>
+    <input type="hidden" id="modal-know-id">
+    <div class="space-y-3">
+      <div>
+        <label class="text-xs text-slate-400">Reference ID</label>
+        <input type="text" id="modal-ref-id" class="w-full bg-slate-900/50 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-brand-500" placeholder="FAQ-001">
+      </div>
+      <div>
+        <label class="text-xs text-slate-400">Tipe</label>
+        <select id="modal-type" class="w-full bg-slate-900/50 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 focus:outline-none">
+          <option value="faq">FAQ</option><option value="product">Product</option><option value="knowledge">Knowledge</option>
+        </select>
+      </div>
+      <div>
+        <label class="text-xs text-slate-400">Question</label>
+        <input type="text" id="modal-question" class="w-full bg-slate-900/50 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-brand-500" placeholder="Pertanyaan...">
+      </div>
+      <div>
+        <label class="text-xs text-slate-400">Answer</label>
+        <textarea id="modal-answer" rows="3" class="w-full bg-slate-900/50 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-brand-500 resize-none" placeholder="Jawaban..."></textarea>
+      </div>
+      <div class="flex items-center gap-2">
+        <input type="checkbox" id="modal-active" checked class="rounded">
+        <label for="modal-active" class="text-xs text-slate-400">Aktif</label>
+      </div>
+    </div>
+    <div class="flex justify-end gap-2 mt-5">
+      <button onclick="closeKnowledgeModal()" class="px-4 py-2 text-xs rounded-lg border border-slate-700 text-slate-300 hover:bg-slate-800 transition-all">Batal</button>
+      <button onclick="saveKnowledge()" class="px-4 py-2 text-xs rounded-lg bg-brand-600 hover:bg-brand-500 text-white font-semibold transition-all">Simpan</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: User Edit -->
+<div id="user-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center modal-overlay">
+  <div class="glass rounded-2xl p-6 w-full max-w-md mx-4 shadow-2xl">
+    <h3 class="text-lg font-bold mb-4">Edit User</h3>
+    <input type="hidden" id="modal-user-id">
+    <div class="space-y-3">
+      <div>
+        <label class="text-xs text-slate-400">Username</label>
+        <input type="text" id="modal-username" class="w-full bg-slate-900/50 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-brand-500">
+      </div>
+      <div>
+        <label class="text-xs text-slate-400">First Name</label>
+        <input type="text" id="modal-firstname" class="w-full bg-slate-900/50 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-brand-500">
+      </div>
+    </div>
+    <div class="flex justify-end gap-2 mt-5">
+      <button onclick="document.getElementById('user-modal').classList.add('hidden')" class="px-4 py-2 text-xs rounded-lg border border-slate-700 text-slate-300 hover:bg-slate-800 transition-all">Batal</button>
+      <button onclick="saveUser()" class="px-4 py-2 text-xs rounded-lg bg-brand-600 hover:bg-brand-500 text-white font-semibold transition-all">Simpan</button>
+    </div>
+  </div>
+</div>
+
+<footer class="mt-6 text-center text-xs text-slate-600 pb-4">
+  <p>Tim Magang DISKOMINFO Semarang 2026 - Universitas Dian Nuswantoro</p>
+</footer>
+
+<script>
+  // ===== STATE =====
+  let usersPage = 1, usersTotal = 1;
+  let sessPage = 1, sessTotal = 1;
+  let knowPage = 1, knowTotal = 1;
+  let ratingsPage = 1, ratingsTotal = 1;
+  let ratingChartInstance = null;
+
+  // ===== HELPERS =====
+  function getBaseUrl() { return document.getElementById('config-url').value.trim(); }
+  function getHeaders() {
+    return { 'Authorization': `Bearer ${document.getElementById('config-token').value.trim()}`, 'Content-Type': 'application/json' };
+  }
+  async function apiFetch(path, opts = {}) {
+    const res = await fetch(`${getBaseUrl()}${path}`, { headers: getHeaders(), ...opts });
+    return res.json();
+  }
+  function formatDate(d) { return d ? new Date(d).toLocaleString('id-ID', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' }) : '-'; }
+
+  // ===== TAB SWITCHING =====
+  function switchTab(name) {
+    document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+    document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+    document.getElementById(`content-${name}`).classList.remove('hidden');
+    document.getElementById(`tab-${name}`).classList.add('active');
+  }
+
+  // ===== SERVER STATUS =====
+  async function checkServer() {
+    const dot = document.getElementById('status-dot');
+    const txt = document.getElementById('server-status');
+    try {
+      const res = await fetch(`${getBaseUrl()}/`);
+      if (res.ok) { txt.textContent = 'Server Online'; dot.className = 'w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse'; }
+      else throw 0;
+    } catch { txt.textContent = 'Server Offline'; dot.className = 'w-2.5 h-2.5 rounded-full bg-rose-500 animate-pulse'; }
+  }
+
+  // ===== CONNECT & SYNC =====
+  async function connectAndSync() {
+    await checkServer();
+    await Promise.all([loadUsers(1), loadSessions(1), loadKnowledge(1), loadRatings(1), loadStats()]);
+  }
+
+  // ===== STATS =====
+  async function loadStats() {
+    try {
+      const [u, s, r, k] = await Promise.all([
+        apiFetch('/api/users?limit=1'), apiFetch('/api/sessions?limit=1'),
+        apiFetch('/api/ratings?limit=1'), apiFetch('/api/knowledge?limit=1')
+      ]);
+      document.getElementById('stat-users').textContent = u.pagination?.total ?? 0;
+      document.getElementById('stat-sessions').textContent = s.pagination?.total ?? 0;
+      document.getElementById('stat-ratings-avg').textContent = r.stats?.average?.toFixed(2) ?? '0.00';
+      document.getElementById('stat-knowledge').textContent = k.pagination?.total ?? 0;
+    } catch {}
+  }
+
+  // ===== USERS CRUD =====
+  async function loadUsers(page = 1) {
+    if (page < 1) return;
+    try {
+      const search = document.getElementById('users-search')?.value || '';
+      let url = `/api/users?page=${page}&limit=8`;
+      if (search) url += `&search=${encodeURIComponent(search)}`;
+      const json = await apiFetch(url);
+      usersPage = json.pagination.page; usersTotal = json.pagination.totalPages;
+      const tbody = document.getElementById('users-tbody');
+      if (json.data.length === 0) { tbody.innerHTML = '<tr><td colspan="5" class="text-center py-8 text-slate-500">Tidak ada data user.</td></tr>'; }
+      else { tbody.innerHTML = json.data.map(u => `
+        <tr class="hover:bg-slate-900/30 transition-colors">
+          <td class="py-3 text-xs text-slate-400">${u.id}</td>
+          <td class="py-3">${u.username ? '@'+u.username : '-'}</td>
+          <td class="py-3 font-medium">${u.first_name || '-'}</td>
+          <td class="py-3 text-xs text-slate-500">${formatDate(u.created_at)}</td>
+          <td class="py-3 text-right space-x-1">
+            <button onclick='openUserModal(${JSON.stringify(u)})' class="px-2 py-1 text-xs rounded bg-brand-600/10 border border-brand-500/20 hover:bg-brand-500 hover:text-white transition-all">Edit</button>
+            <button onclick="deleteUser(${u.id})" class="px-2 py-1 text-xs rounded bg-rose-600/10 border border-rose-500/20 hover:bg-rose-500 hover:text-white transition-all">Hapus</button>
+          </td>
+        </tr>`).join(''); }
+      document.getElementById('users-page-info').textContent = `Hal ${usersPage} / ${usersTotal || 1} (Total: ${json.pagination.total})`;
+      document.getElementById('users-prev').disabled = usersPage <= 1;
+      document.getElementById('users-next').disabled = usersPage >= usersTotal;
+    } catch(e) { console.error(e); }
+  }
+  function openUserModal(u) {
+    document.getElementById('modal-user-id').value = u.id;
+    document.getElementById('modal-username').value = u.username || '';
+    document.getElementById('modal-firstname').value = u.first_name || '';
+    document.getElementById('user-modal').classList.remove('hidden');
+  }
+  async function saveUser() {
+    const id = document.getElementById('modal-user-id').value;
+    await apiFetch(`/api/users/${id}`, { method: 'PUT', body: JSON.stringify({ username: document.getElementById('modal-username').value, first_name: document.getElementById('modal-firstname').value }) });
+    document.getElementById('user-modal').classList.add('hidden');
+    await loadUsers(usersPage);
+  }
+  async function deleteUser(id) {
+    if (!confirm('Yakin ingin menghapus user ini? Semua sesi & pesan terkait juga akan terhapus.')) return;
+    await apiFetch(`/api/users/${id}`, { method: 'DELETE' });
+    await loadUsers(usersPage); await loadStats();
+  }
+
+  // ===== SESSIONS CRUD =====
+  async function loadSessions(page = 1) {
+    if (page < 1) return;
+    try {
+      const status = document.getElementById('sess-filter').value;
+      const search = document.getElementById('sess-search')?.value || '';
+      let url = `/api/sessions?page=${page}&limit=8`;
+      if (status) url += `&status=${status}`;
+      if (search) url += `&search=${encodeURIComponent(search)}`;
+      const json = await apiFetch(url);
+      sessPage = json.pagination.page; sessTotal = json.pagination.totalPages;
+      const tbody = document.getElementById('sess-tbody');
+      if (json.data.length === 0) { tbody.innerHTML = '<tr><td colspan="5" class="text-center py-8 text-slate-500">Tidak ada sesi.</td></tr>'; }
+      else { tbody.innerHTML = json.data.map(s => {
+        const badge = s.status === 'active' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' : 'bg-slate-800 border-slate-700 text-slate-400';
+        return `<tr class="hover:bg-slate-900/30 transition-colors">
+          <td class="py-3"><div class="font-medium">${s.first_name||'User'}</div><div class="text-xs text-slate-500">${s.username?'@'+s.username:'ID: '+s.user_id}</div></td>
+          <td class="py-3"><span class="px-2 py-0.5 rounded border text-xs font-semibold ${badge}">${s.status.toUpperCase()}</span></td>
+          <td class="py-3 text-slate-400">${s.message_count} pesan</td>
+          <td class="py-3 text-xs text-slate-500">${formatDate(s.updated_at)}</td>
+          <td class="py-3 text-right space-x-1">
+            <button onclick="viewChat('${s.id_session}','${(s.first_name||'User').replace(/'/g,"\\'")}')" class="px-2 py-1 text-xs rounded bg-brand-600/10 border border-brand-500/20 hover:bg-brand-500 hover:text-white transition-all">Chat</button>
+            <button onclick="deleteSession('${s.id_session}')" class="px-2 py-1 text-xs rounded bg-rose-600/10 border border-rose-500/20 hover:bg-rose-500 hover:text-white transition-all">Hapus</button>
+          </td>
+        </tr>`;}).join(''); }
+      document.getElementById('sess-page-info').textContent = `Hal ${sessPage} / ${sessTotal || 1} (Total: ${json.pagination.total})`;
+      document.getElementById('sess-prev').disabled = sessPage <= 1;
+      document.getElementById('sess-next').disabled = sessPage >= sessTotal;
+    } catch(e) { console.error(e); }
+  }
+  async function deleteSession(id) {
+    if (!confirm('Hapus sesi beserta semua pesannya?')) return;
+    await apiFetch(`/api/sessions/${id}`, { method: 'DELETE' });
+    await loadSessions(sessPage); await loadStats();
+  }
+  async function viewChat(sessionId, name) {
+    switchTab('dashboard');
+    document.getElementById('chat-title').textContent = `Sesi bersama: ${name}`;
+    const bubbles = document.getElementById('chat-bubbles');
+    bubbles.innerHTML = '<div class="text-slate-500 animate-pulse text-xs">Memuat...</div>';
+    try {
+      const json = await apiFetch(`/api/sessions/${sessionId}/messages`);
+      if (json.data.length === 0) { bubbles.innerHTML = '<div class="text-slate-500 text-xs">Belum ada pesan.</div>'; return; }
+      bubbles.innerHTML = json.data.map(m => {
+        const isBot = m.sender === 'bot';
+        return `<div class="flex w-full ${isBot?'justify-start':'justify-end'}">
+          <div class="max-w-[85%] px-3 py-2 text-sm shadow-md ${isBot?'chat-bot text-slate-200':'chat-user text-white'}">
+            <p class="leading-relaxed whitespace-pre-line">${m.content}</p>
+            <span class="block text-[10px] text-right mt-1 opacity-50">${new Date(m.created_at).toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'})}</span>
+          </div>
+        </div>`;}).join('');
+      bubbles.scrollTop = bubbles.scrollHeight;
+    } catch(e) { bubbles.innerHTML = `<div class="text-rose-400 text-xs">Gagal: ${e.message}</div>`; }
+  }
+
+  // ===== KNOWLEDGE CRUD =====
+  async function loadKnowledge(page = 1) {
+    if (page < 1) return;
+    try {
+      const typeF = document.getElementById('know-filter').value;
+      const search = document.getElementById('know-search')?.value || '';
+      let url = `/api/knowledge?page=${page}&limit=8`;
+      if (typeF) url += `&type=${typeF}`;
+      if (search) url += `&search=${encodeURIComponent(search)}`;
+      const json = await apiFetch(url);
+      knowPage = json.pagination.page; knowTotal = json.pagination.totalPages;
+      const tbody = document.getElementById('know-tbody');
+      if (json.data.length === 0) { tbody.innerHTML = '<tr><td colspan="6" class="text-center py-8 text-slate-500">Tidak ada knowledge.</td></tr>'; }
+      else { tbody.innerHTML = json.data.map(k => {
+        const preview = k.data ? (k.data.question || JSON.stringify(k.data)).substring(0, 60) + '...' : '-';
+        const activeBadge = k.is_active ? '<span class="text-emerald-400">✓</span>' : '<span class="text-rose-400">✗</span>';
+        return `<tr class="hover:bg-slate-900/30 transition-colors">
+          <td class="py-3 text-xs text-slate-400">${k.id}</td>
+          <td class="py-3 text-xs">${k.reference_id || '-'}</td>
+          <td class="py-3"><span class="px-2 py-0.5 rounded bg-slate-800 border border-slate-700 text-xs">${k.type||'-'}</span></td>
+          <td class="py-3 text-xs text-slate-400 max-w-[200px] truncate">${preview}</td>
+          <td class="py-3 text-center">${activeBadge}</td>
+          <td class="py-3 text-right space-x-1">
+            <button onclick='editKnowledge(${JSON.stringify(k).replace(/'/g,"&#39;")})' class="px-2 py-1 text-xs rounded bg-brand-600/10 border border-brand-500/20 hover:bg-brand-500 hover:text-white transition-all">Edit</button>
+            <button onclick="deleteKnowledge(${k.id})" class="px-2 py-1 text-xs rounded bg-rose-600/10 border border-rose-500/20 hover:bg-rose-500 hover:text-white transition-all">Hapus</button>
+          </td>
+        </tr>`;}).join(''); }
+      document.getElementById('know-page-info').textContent = `Hal ${knowPage} / ${knowTotal || 1} (Total: ${json.pagination.total})`;
+      document.getElementById('know-prev').disabled = knowPage <= 1;
+      document.getElementById('know-next').disabled = knowPage >= knowTotal;
+    } catch(e) { console.error(e); }
+  }
+  function openKnowledgeModal() {
+    document.getElementById('modal-title').textContent = 'Tambah Knowledge';
+    document.getElementById('modal-know-id').value = '';
+    document.getElementById('modal-ref-id').value = '';
+    document.getElementById('modal-type').value = 'faq';
+    document.getElementById('modal-question').value = '';
+    document.getElementById('modal-answer').value = '';
+    document.getElementById('modal-active').checked = true;
+    document.getElementById('knowledge-modal').classList.remove('hidden');
+  }
+  function editKnowledge(k) {
+    document.getElementById('modal-title').textContent = 'Edit Knowledge';
+    document.getElementById('modal-know-id').value = k.id;
+    document.getElementById('modal-ref-id').value = k.reference_id || '';
+    document.getElementById('modal-type').value = k.type || 'faq';
+    document.getElementById('modal-question').value = k.data?.question || '';
+    document.getElementById('modal-answer').value = k.data?.answer || '';
+    document.getElementById('modal-active').checked = k.is_active !== false;
+    document.getElementById('knowledge-modal').classList.remove('hidden');
+  }
+  function closeKnowledgeModal() { document.getElementById('knowledge-modal').classList.add('hidden'); }
+  async function saveKnowledge() {
+    const id = document.getElementById('modal-know-id').value;
+    const body = {
+      reference_id: document.getElementById('modal-ref-id').value || null,
+      type: document.getElementById('modal-type').value,
+      question: document.getElementById('modal-question').value,
+      answer: document.getElementById('modal-answer').value,
+      is_active: document.getElementById('modal-active').checked,
+      data: { question: document.getElementById('modal-question').value, answer: document.getElementById('modal-answer').value }
+    };
+    if (id) { await apiFetch(`/api/knowledge/${id}`, { method: 'PUT', body: JSON.stringify(body) }); }
+    else { await apiFetch('/api/knowledge', { method: 'POST', body: JSON.stringify(body) }); }
+    closeKnowledgeModal();
+    await loadKnowledge(knowPage); await loadStats();
+  }
+  async function deleteKnowledge(id) {
+    if (!confirm('Hapus knowledge ini?')) return;
+    await apiFetch(`/api/knowledge/${id}`, { method: 'DELETE' });
+    await loadKnowledge(knowPage); await loadStats();
+  }
+
+  // ===== RATINGS =====
+  async function loadRatings(page = 1) {
+    if (page < 1) return;
+    try {
+      const search = document.getElementById('ratings-search')?.value || '';
+      let url = `/api/ratings?page=${page}&limit=8`;
+      if (search) url += `&search=${encodeURIComponent(search)}`;
+      const json = await apiFetch(url);
+      ratingsPage = json.pagination.page; ratingsTotal = json.pagination.totalPages;
+      const tbody = document.getElementById('ratings-tbody');
+      if (json.data.length === 0) { tbody.innerHTML = '<tr><td colspan="5" class="text-center py-8 text-slate-500">Tidak ada rating.</td></tr>'; }
+      else { tbody.innerHTML = json.data.map(r => `
+        <tr class="hover:bg-slate-900/30 transition-colors">
+          <td class="py-3 text-xs text-slate-400">${r.id}</td>
+          <td class="py-3">${r.first_name||'User'} <span class="text-xs text-slate-500">${r.username?'@'+r.username:''}</span></td>
+          <td class="py-3 text-amber-400 font-bold">${'⭐'.repeat(r.score)} (${r.score})</td>
+          <td class="py-3 text-xs text-slate-500">${formatDate(r.created_at)}</td>
+          <td class="py-3 text-right">
+            <button onclick="deleteRating(${r.id})" class="px-2 py-1 text-xs rounded bg-rose-600/10 border border-rose-500/20 hover:bg-rose-500 hover:text-white transition-all">Hapus</button>
+          </td>
+        </tr>`).join(''); }
+      document.getElementById('ratings-page-info').textContent = `Hal ${ratingsPage} / ${ratingsTotal || 1} (Total: ${json.pagination.total})`;
+      document.getElementById('ratings-prev').disabled = ratingsPage <= 1;
+      document.getElementById('ratings-next').disabled = ratingsPage >= ratingsTotal;
+      // Update chart
+      const dist = [0,0,0,0,0];
+      json.data.forEach(r => { if(r.score>=1&&r.score<=5) dist[r.score-1]++; });
+      updateChart(dist);
+    } catch(e) { console.error(e); }
+  }
+  async function deleteRating(id) {
+    if (!confirm('Hapus rating ini?')) return;
+    await apiFetch(`/api/ratings/${id}`, { method: 'DELETE' });
+    await loadRatings(ratingsPage); await loadStats();
+  }
+
+  // ===== CHART =====
+  function updateChart(data) {
+    const ctx = document.getElementById('ratingChart').getContext('2d');
+    if (ratingChartInstance) ratingChartInstance.destroy();
+    ratingChartInstance = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: ['⭐ 1', '⭐ 2', '⭐ 3', '⭐ 4', '⭐ 5'],
+        datasets: [{ data, backgroundColor: ['rgba(239,68,68,0.4)','rgba(249,115,22,0.4)','rgba(234,179,8,0.4)','rgba(59,130,246,0.4)','rgba(16,185,129,0.4)'], borderColor: ['#ef4444','#f97316','#eab308','#3b82f6','#10b981'], borderWidth: 1.5, borderRadius: 6 }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: { y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8', precision: 0 } }, x: { grid: { display: false }, ticks: { color: '#94a3b8' } } }
+      }
+    });
+  }
+
+  // ===== INIT =====
+  window.addEventListener('DOMContentLoaded', checkServer);
+</script>
+</body>
+</html>
